@@ -4,5 +4,5 @@
   https://www.fullstackpython.com/websockets.html
  * Docs flask-SecoketIO
   https://flask-socketio.readthedocs.io/en/latest/
- 
- 
+ * Tornado example. Needs the check_origin fix though
+ https://coderwall.com/p/gvknya/python-websocket-server
