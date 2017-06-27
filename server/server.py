@@ -1,9 +1,22 @@
-from flask import Flask, render_template
-from flask_socketio import SocketIO
+from tornado import websocket
+import tornado.ioloop
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret!'
-socketio = SocketIO(app)
+class EchoWebSocket(websocket.WebSocketHandler):
+    def check_origin(self, origin):
+        return True
 
-if __name__ == '__main__':
-    socketio.run(app)
+    def open(self):
+        print "Websocket Opened"
+
+    def on_message(self, message):
+        print(u"message %s" % message)
+        self.write_message(u"You said: %s" % message)
+
+    def on_close(self):
+        print "Websocket closed"
+
+application = tornado.web.Application([(r"/", EchoWebSocket),])
+
+if __name__ == "__main__":
+    application.listen(9000)
+    tornado.ioloop.IOLoop.instance().start()
