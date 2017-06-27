@@ -6,3 +6,6 @@
   https://flask-socketio.readthedocs.io/en/latest/
  * Tornado example. Needs the check_origin fix though
  https://coderwall.com/p/gvknya/python-websocket-server
+ * Pygame tutorial
+ http://www.pygame.org/docs/tut/PygameIntro.html
+ 

@@ -1,16 +1,19 @@
 import sys, pygame
-pygame.init()
 
-size = width, height = 3*320, 3*240
-speed = [2, 2]
-black = 0, 0, 0
 
-screen = pygame.display.set_mode(size)
+def init_screen():
+    pygame.init()
 
-ball = pygame.image.load("ball.png")
-ballrect = ball.get_rect()
+    size = width, height = 3*320, 3*240
+    speed = [2, 2]
+    black = 0, 0, 0
 
-while 1:
+    screen = pygame.display.set_mode(size)
+
+    ball = pygame.image.load("ball.png")
+    ballrect = ball.get_rect()
+
+    # while 1:
     for event in pygame.event.get():
         if event.type == pygame.QUIT: sys.exit()
 
