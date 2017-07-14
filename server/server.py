@@ -1,5 +1,9 @@
 from tornado import websocket
 import tornado.ioloop
+import threading
+import Queue
+
+q = Queue.Queue()
 
 class EchoWebSocket(websocket.WebSocketHandler):
     def check_origin(self, origin):
@@ -9,14 +13,20 @@ class EchoWebSocket(websocket.WebSocketHandler):
         print "Websocket Opened"
 
     def on_message(self, message):
-        print(u"message %s" % message)
+        #print(u"message %s" % message)
         self.write_message(u"You said: %s" % message)
+        q.put(message)
 
     def on_close(self):
         print "Websocket closed"
 
-application = tornado.web.Application([(r"/", EchoWebSocket),])
+def start():
+    application = tornado.web.Application([(r"/", EchoWebSocket),])
+    application.listen(9001)
 
-if __name__ == "__main__":
-    application.listen(9000)
-    tornado.ioloop.IOLoop.instance().start()
+    t = threading.Thread(target = tornado.ioloop.IOLoop.instance().start)
+    t.deamon = True
+    t.start()
+
+def stop():
+    tornado.ioloop.IOLoop.instance().stop()
