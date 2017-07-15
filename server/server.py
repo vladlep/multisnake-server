@@ -5,6 +5,7 @@ import Queue
 
 q = Queue.Queue()
 
+
 class EchoWebSocket(websocket.WebSocketHandler):
     def check_origin(self, origin):
         return True
@@ -20,13 +21,15 @@ class EchoWebSocket(websocket.WebSocketHandler):
     def on_close(self):
         print "Websocket closed"
 
+
 def start():
     application = tornado.web.Application([(r"/", EchoWebSocket),])
     application.listen(9001)
 
-    t = threading.Thread(target = tornado.ioloop.IOLoop.instance().start)
-    t.deamon = True
+    t = threading.Thread(target=tornado.ioloop.IOLoop.instance().start)
+    t.daemon = True
     t.start()
+
 
 def stop():
     tornado.ioloop.IOLoop.instance().stop()
