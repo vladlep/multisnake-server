@@ -9,18 +9,20 @@ class Player(pygame.sprite.Sprite):
         self.name = name
         self.x = x
         self.y = y
-        self.update('')
-
-    def update(self, command):
-        if command == 'left':
-            self.x -= 1
-        elif command == 'right':
-            self.x += 1
-        elif command == 'up':
-            self.y -= 1
-        elif command == 'down':
-            self.y += 1
-
         self.rect = self.rect.move([self.x, self.y])
+        self.direction = ''
+
+    def handle_input(self, command):
+        self.direction = command
+
+    def update(self):
+        if self.direction == 'left':
+            self.rect = self.rect.move([-1, 0])
+        elif self.direction == 'right':
+            self.rect = self.rect.move([1, 0])
+        elif self.direction == 'up':
+            self.rect = self.rect.move([0, -1])
+        elif self.direction == 'down':
+            self.rect = self.rect.move([0, 1])
 
 

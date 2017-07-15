@@ -6,11 +6,11 @@ from player import Player
 def handle_input(input, players):
     player, move = input.split("/")
     try:
-        players[player].update(move)
+        players[player].handle_input(move)
     except KeyError:
         new_player = Player(player, 0, 0)
         players[player] = new_player
-        new_player.update(move)
+        handle_input(input, players)
 
 
 pygame.init()
@@ -26,6 +26,15 @@ players = {
     2: Player(2, 50, 50)
 }
 
+# Fill background
+background = pygame.Surface(screen.get_size())
+background = background.convert()
+background.fill((0, 0, 0))
+
+# Blit everything to the screen
+screen.blit(background, (0, 0))
+pygame.display.flip()
+
 server.start()
 
 while 1:
@@ -39,6 +48,7 @@ while 1:
 
     screen.fill(black)
     for key, p in players.iteritems():
+        p.update()
         screen.blit(p.image, p.rect)
     pygame.display.flip()
     clock.tick(50) #Don't run faster then 50 fps
