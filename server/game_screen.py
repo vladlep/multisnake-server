@@ -38,15 +38,11 @@ def handle_local_input(type, key, players):
 pygame.init()
 
 size = width, height = 3*320, 3*240
-speed = [2, 2]
-black = 0, 0, 0
+BLACK = 0, 0, 0
 clock = pygame.time.Clock()
 
 screen = pygame.display.set_mode(size)
-players = {
-    1: Player(1, 10, 10),
-    2: Player(2, 50, 50)
-}
+players = {}
 
 # Fill background
 background = pygame.Surface(screen.get_size())
@@ -69,7 +65,7 @@ while 1:
     while not server.q.empty():
         handle_nonlocal_input(server.q.get(), players)
 
-    screen.fill(black)
+    screen.fill(BLACK)
     for key, p in players.iteritems():
         p.update()
         screen.blit(p.image, p.rect)
