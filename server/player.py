@@ -1,13 +1,13 @@
 import pygame
 import util
+import config
+
 from tail import Tail
 
 
 SPEED = 3
 BLOCK_SIZE = 30
-
-WIDTH = 800 #TODO get from main
-HEIGHT = 600 #TODO get from main
+HALF_BLOCK = 0.5 * BLOCK_SIZE
 
 class Player(pygame.sprite.Sprite):
 
@@ -20,11 +20,12 @@ class Player(pygame.sprite.Sprite):
         self.image.fill(self.color)
         self.rect = self.image.get_rect()
         self.name = name
-        self.x = x
-        self.y = y
-        self.rect = self.rect.move([self.x, self.y])
+        self.score = 0
+        self.pause = 0
+
         self.direction = ''
         self.tail = [ Tail(self, 1) ]
+        self.tail_group = pygame.sprite.Group() #Everything except the first tail (because you will hit it anyways on turns)
         self.positions = [] #to keep track of where the tail should be drawn
 
     def get_position_behind(self, nr):
@@ -40,12 +41,25 @@ class Player(pygame.sprite.Sprite):
         return (min(255, r+70), min(255, g+70), min(255, b+70))
 
     def grow(self):
-        self.tail.append(Tail(self, len(self.tail)+1))
+        new_tail = Tail(self, len(self.tail)+1)
+        self.tail.append(new_tail)
+        self.tail_group.add(new_tail)
+        self.score+=1
 
     def handle_input(self, command):
         self.direction = command
 
     def update(self):
+        #check hit:
+        if self.pause > 0:
+            self.pause -= 1
+            return
+
+        hit = pygame.sprite.spritecollide(self, self.tail_group, False)
+        if len(hit) > 0:
+            self.score -= 1
+            self.pause = 10
+
         if self.direction == 'left':
             self.rect = self.rect.move([-SPEED, 0])
         elif self.direction == 'right':
@@ -54,14 +68,16 @@ class Player(pygame.sprite.Sprite):
             self.rect = self.rect.move([0, -SPEED])
         elif self.direction == 'down':
             self.rect = self.rect.move([0, SPEED])
+
         self.positions.append( (self.rect.x, self.rect.y) ) #TODO this will run out of memory
-        if self.rect.x < -BLOCK_SIZE:
-            self.rect.x = WIDTH + BLOCK_SIZE
-        elif self.rect.x > WIDTH + BLOCK_SIZE:
-            self.rect.x = -BLOCK_SIZE
-        if self.rect.y < -BLOCK_SIZE:
-            self.rect.y = HEIGHT + BLOCK_SIZE
-        elif self.rect.y > HEIGHT + BLOCK_SIZE:
-            self.rect.y = -BLOCK_SIZE
+
+        if self.rect.x < -HALF_BLOCK:
+            self.rect.x = config.SCREEN_WIDTH + HALF_BLOCK
+        elif self.rect.x > config.SCREEN_WIDTH + HALF_BLOCK:
+            self.rect.x = -HALF_BLOCK
+        if self.rect.y < -HALF_BLOCK:
+            self.rect.y = config.SCREEN_HEIGHT + HALF_BLOCK
+        elif self.rect.y > config.SCREEN_HEIGHT + HALF_BLOCK:
+            self.rect.y = -HALF_BLOCK
         for t in self.tail:
             t.update()

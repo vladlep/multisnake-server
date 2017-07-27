@@ -6,6 +6,7 @@ BETWEEN_SIZE = 5
 
 class Tail(pygame.sprite.Sprite):
     def __init__(self, player, nr):
+        super(Tail, self).__init__()
         self.player = player
         self.nr = nr
         self.image = pygame.Surface((BLOCK_SIZE, BLOCK_SIZE))

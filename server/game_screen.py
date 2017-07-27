@@ -1,7 +1,9 @@
 import sys, pygame
 import server
+import config
 from player import Player
 from food import Food
+from score import Score
 
 from pygame.locals import Rect, DOUBLEBUF, QUIT, K_ESCAPE, KEYDOWN, K_DOWN, \
     K_LEFT, K_UP, K_RIGHT, KEYUP, K_LCTRL, K_RETURN, FULLSCREEN
@@ -40,7 +42,7 @@ def handle_local_input(type, key, players, player_group):
 
 pygame.init()
 
-size = width, height = 800, 600
+size = config.SCREEN_WIDTH, config.SCREEN_HEIGHT
 BLACK = 0, 0, 0
 clock = pygame.time.Clock()
 
@@ -64,6 +66,8 @@ server.start()
 food = Food()
 food.place_random()
 
+score = Score()
+
 while 1:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -75,20 +79,27 @@ while 1:
         handle_nonlocal_input(server.q.get(), players, player_group)
 
     screen.fill(BLACK)
+
     #Check collisions
     players_ate = pygame.sprite.spritecollide(food, player_group, False)
     for p in players_ate:
         p.grow()
     if len(players_ate) > 0:
         food.place_random()
+        #score.update(players)
 
     #Add everything to the screen
+    screen.blit(score.image, score.rect)
+
+    score.update(players)
     for key, p in players.iteritems():
         p.update()
         screen.blit(p.image, p.rect)
         for t in p.tail:
             screen.blit(t.image, t.rect)
-        screen.blit(food.image, food.rect)
+
+    screen.blit(food.image, food.rect)
+
     pygame.display.flip()
     clock.tick(50) #Don't run faster then 50 fps
     pygame.display.set_caption("fps: " + str(clock.get_fps()))
