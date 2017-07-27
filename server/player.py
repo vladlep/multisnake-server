@@ -22,10 +22,17 @@ class Player(pygame.sprite.Sprite):
         self.name = name
         self.score = 0
         self.pause = 0
+        self.collidable_tail_group = pygame.sprite.Group()
+        self.reset()
 
+    def reset(self):
+        self.rect.x = 0
+        self.rect.y = 0
         self.direction = ''
         self.tail = [ Tail(self, 1) ]
-        self.tail_group = pygame.sprite.Group() #Everything except the first tail (because you will hit it anyways on turns)
+        for t in self.collidable_tail_group:
+            t.kill() # remove from any groups
+        self.collidable_tail_group = pygame.sprite.Group() #Everything except the first tail (because you will hit it anyways on turns)
         self.positions = [] #to keep track of where the tail should be drawn
 
     def get_position_behind(self, nr):
@@ -40,25 +47,31 @@ class Player(pygame.sprite.Sprite):
         (r,g,b) = self.color
         return (min(255, r+70), min(255, g+70), min(255, b+70))
 
-    def grow(self):
+    def grow(self, tail_group):
         new_tail = Tail(self, len(self.tail)+1)
         self.tail.append(new_tail)
-        self.tail_group.add(new_tail)
+        self.collidable_tail_group.add(new_tail)
         self.score+=1
+        tail_group.add(new_tail)
 
     def handle_input(self, command):
         self.direction = command
 
+    def loose(self):
+        self.score -= 1
+        self.pause = 100
+
     def update(self):
         #check hit:
         if self.pause > 0:
+            if self.pause == 1:
+                self.reset()
             self.pause -= 1
             return
 
-        hit = pygame.sprite.spritecollide(self, self.tail_group, False)
+        hit = pygame.sprite.spritecollide(self, self.collidable_tail_group, False)
         if len(hit) > 0:
-            self.score -= 1
-            self.pause = 10
+            self.loose()
 
         if self.direction == 'left':
             self.rect = self.rect.move([-SPEED, 0])

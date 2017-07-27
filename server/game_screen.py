@@ -51,6 +51,7 @@ players = {}
 
 #We keep our sprites in groups to easily manage them
 player_group = pygame.sprite.Group()
+tail_group = pygame.sprite.Group()
 
 # Fill background
 background = pygame.Surface(screen.get_size())
@@ -83,10 +84,14 @@ while 1:
     #Check collisions
     players_ate = pygame.sprite.spritecollide(food, player_group, False)
     for p in players_ate:
-        p.grow()
+        p.grow(tail_group)
     if len(players_ate) > 0:
         food.place_random()
-        #score.update(players)
+    #Check hits
+    player_hits = pygame.sprite.groupcollide(player_group, tail_group, False, False)
+    for p, t in player_hits.iteritems():
+        print("hit!" + p.name)
+        p.loose()
 
     #Add everything to the screen
     screen.blit(score.image, score.rect)
