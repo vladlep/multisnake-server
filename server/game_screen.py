@@ -45,7 +45,9 @@ def handle_local_input(type, key, players):
         return #nothing to do here
     handle_input(LOCAL_PLAYER_NAME, key_map[key], players)
 
+pygame.mixer.pre_init(44100, -16, 1, 512) #to prevent lag
 pygame.init()
+pygame.mixer.init()
 
 size = config.SCREEN_WIDTH, config.SCREEN_HEIGHT
 BLACK = 0, 0, 0
@@ -70,7 +72,12 @@ food.place_random()
 
 score = Score()
 
+#Sounds:
+eat_sound = pygame.mixer.Sound("assets/audio/coin.wav")
+die_sound = pygame.mixer.Sound("assets/audio/pixel_death.wav")
+
 while 1:
+    ######### Handle input ############
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             server.stop()
@@ -80,16 +87,20 @@ while 1:
     while not server.q.empty():
         handle_nonlocal_input(server.q.get(), players)
 
-    screen.fill(BLACK)
-
     ############ Collisions ############
     #Check Food
     players_ate = pygame.sprite.spritecollide(food, players, False)
     for p in players_ate:
         p.grow()
+        eat_sound.play()
     if len(players_ate) > 0:
         food.place_random()
-    #Check hits
+    #Check self hits:
+    for p in players.sprites():
+        if not p.dead and p.is_self_hit():
+            p.loose()
+            die_sound.play(maxtime=1000)
+    #Check hits with every other snake
     everything = pygame.sprite.Group()
     for p in players.sprites():
         everything.add(p.get_group())
@@ -99,9 +110,11 @@ while 1:
             if len(pygame.sprite.spritecollide(p, everything, False, False)) > 0:
                 print(p.name + " got hit!")
                 p.loose()
-            everything.remove(p.get_group()) # Add self
+                die_sound.play(maxtime=1000)
+            everything.add(p.get_group()) # Add self
 
     ########## Adding to the screen ###########
+    screen.fill(BLACK)
     screen.blit(score.image, score.rect)
 
     score.update(players)

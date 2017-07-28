@@ -76,17 +76,17 @@ class Player(pygame.sprite.Sprite):
         self.score -= 1
         self.pause = 100
 
+    def is_self_hit(self):
+        ''' Did the snake hit itself '''
+        hit = pygame.sprite.spritecollide(self, self.collidable_tail_group, False)
+        return len(hit) > 0
+
     def update(self):
         #check hit:
         if self.pause > 0:
             if self.pause == 1:
                 self.reset()
             self.pause -= 1
-            return
-
-        hit = pygame.sprite.spritecollide(self, self.collidable_tail_group, False)
-        if len(hit) > 0:
-            self.loose()
             return
 
         if self.direction == 'left':
