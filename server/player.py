@@ -1,17 +1,21 @@
 import pygame
 import util
 import config
+import random
 
 from tail import Tail
 
 
-SPEED = 3
+SPEED = 5
 BLOCK_SIZE = 30
 HALF_BLOCK = 0.5 * BLOCK_SIZE
 
+START_POS_X = [0, config.SCREEN_WIDTH-BLOCK_SIZE]
+START_POS_Y = [0, config.SCREEN_HEIGHT-BLOCK_SIZE]
+
 class Player(pygame.sprite.Sprite):
 
-    def __init__(self, name, x, y):
+    def __init__(self, name):
         #self.image, self.rect = util.load_png('snake.png')
         #self.rect = pygame.Rect
         super(Player, self).__init__()
@@ -22,24 +26,34 @@ class Player(pygame.sprite.Sprite):
         self.name = name
         self.score = 0
         self.pause = 0
-        self.collidable_tail_group = pygame.sprite.Group()
+        self.group = pygame.sprite.Group()
+        self.collidable_tail_group = pygame.sprite.Group() #Everything except the first tail (because you will hit it always on turns)
         self.reset()
 
     def reset(self):
-        self.rect.x = 0
-        self.rect.y = 0
+        self.rect.x = START_POS_X[random.randint(0,1)]
+        self.rect.y = START_POS_Y[random.randint(0,1)]
+        self.dead = False
         self.direction = ''
-        self.tail = [ Tail(self, 1) ]
-        for t in self.collidable_tail_group:
-            t.kill() # remove from any groups
-        self.collidable_tail_group = pygame.sprite.Group() #Everything except the first tail (because you will hit it anyways on turns)
         self.positions = [] #to keep track of where the tail should be drawn
+
+        tail = Tail(self, 1)
+        self.tail = [ tail ]
+
+        self.group.empty()
+        self.group.add(self)
+        self.group.add(tail)
+
+        self.collidable_tail_group.empty()
+
+    def get_group(self):
+        return self.group
 
     def get_position_behind(self, nr):
         ''' get the coordinates of *nr* blocks behind me '''
         index = nr * (BLOCK_SIZE / SPEED) + nr + 1 #1 for space in between
         if len(self.positions) < index:
-            return (0,0)
+            return (self.rect.x,self.rect.y)
         return self.positions[len(self.positions) - index]
 
     def get_tail_color(self):
@@ -47,17 +61,18 @@ class Player(pygame.sprite.Sprite):
         (r,g,b) = self.color
         return (min(255, r+70), min(255, g+70), min(255, b+70))
 
-    def grow(self, tail_group):
+    def grow(self):
         new_tail = Tail(self, len(self.tail)+1)
         self.tail.append(new_tail)
         self.collidable_tail_group.add(new_tail)
+        self.group.add(new_tail)
         self.score+=1
-        tail_group.add(new_tail)
 
     def handle_input(self, command):
         self.direction = command
 
     def loose(self):
+        self.dead = True
         self.score -= 1
         self.pause = 100
 
@@ -72,6 +87,7 @@ class Player(pygame.sprite.Sprite):
         hit = pygame.sprite.spritecollide(self, self.collidable_tail_group, False)
         if len(hit) > 0:
             self.loose()
+            return
 
         if self.direction == 'left':
             self.rect = self.rect.move([-SPEED, 0])

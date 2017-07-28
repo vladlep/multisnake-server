@@ -11,34 +11,39 @@ from pygame.locals import Rect, DOUBLEBUF, QUIT, K_ESCAPE, KEYDOWN, K_DOWN, \
 LOCAL_PLAYER_NAME = 'berry'
 key_map = {K_LEFT: 'left', K_UP: 'up', K_RIGHT: 'right', K_DOWN: 'down', K_RETURN: 'register'}
 
+def get_player(name, players):
+    for p in players: #No dict :(
+        if p.name == name:
+            return p
+    return None
+
 def register_player(name, players):
-    if name in players:
+    if get_player(name, players):
         print("WARN: Player already exists")
         return
-    new_player = Player(name, 0, 0) #TODO check if position is free
-    players[name] = new_player
+    new_player = Player(name) #TODO check if position is free
+    players.add(new_player)
     return new_player
 
-def handle_input(player, action, players, player_group):
+def handle_input(name, action, players):
     if action == "register":
-        new_player = register_player(player, players)
-        if new_player:
-            player_group.add(new_player)
+        register_player(name, players)
         return
-    if player not in players:
+    player = get_player(name, players)
+    if not player:
         print("WARN: unregistered player trying to perform action: " + action)
         return
-    players[player].handle_input(action)
+    player.handle_input(action)
 
-def handle_nonlocal_input(input, players, player_group):
-    player, action = input.split("/")
-    handle_input(player, action, players, player_group)
+def handle_nonlocal_input(input, players):
+    name, action = input.split("/")
+    handle_input(name, action, players)
 
-def handle_local_input(type, key, players, player_group):
+def handle_local_input(type, key, players):
     """ type === KEYDOWN or KEYUP """
     if key not in key_map:
         return #nothing to do here
-    handle_input(LOCAL_PLAYER_NAME, key_map[key], players, player_group)
+    handle_input(LOCAL_PLAYER_NAME, key_map[key], players)
 
 pygame.init()
 
@@ -47,11 +52,7 @@ BLACK = 0, 0, 0
 clock = pygame.time.Clock()
 
 screen = pygame.display.set_mode(size)
-players = {}
-
-#We keep our sprites in groups to easily manage them
-player_group = pygame.sprite.Group()
-tail_group = pygame.sprite.Group()
+players = pygame.sprite.Group()
 
 # Fill background
 background = pygame.Surface(screen.get_size())
@@ -75,29 +76,36 @@ while 1:
             server.stop()
             sys.exit()
         elif event.type == KEYDOWN or event.type == KEYUP:
-            handle_local_input(event.type, event.key, players, player_group)
+            handle_local_input(event.type, event.key, players)
     while not server.q.empty():
-        handle_nonlocal_input(server.q.get(), players, player_group)
+        handle_nonlocal_input(server.q.get(), players)
 
     screen.fill(BLACK)
 
-    #Check collisions
-    players_ate = pygame.sprite.spritecollide(food, player_group, False)
+    ############ Collisions ############
+    #Check Food
+    players_ate = pygame.sprite.spritecollide(food, players, False)
     for p in players_ate:
-        p.grow(tail_group)
+        p.grow()
     if len(players_ate) > 0:
         food.place_random()
     #Check hits
-    player_hits = pygame.sprite.groupcollide(player_group, tail_group, False, False)
-    for p, t in player_hits.iteritems():
-        print("hit!" + p.name)
-        p.loose()
+    everything = pygame.sprite.Group()
+    for p in players.sprites():
+        everything.add(p.get_group())
+    for p in players.sprites():
+        if not p.dead:
+            everything.remove(p.get_group()) # Remove self
+            if len(pygame.sprite.spritecollide(p, everything, False, False)) > 0:
+                print(p.name + " got hit!")
+                p.loose()
+            everything.remove(p.get_group()) # Add self
 
-    #Add everything to the screen
+    ########## Adding to the screen ###########
     screen.blit(score.image, score.rect)
 
     score.update(players)
-    for key, p in players.iteritems():
+    for p in players.sprites():
         p.update()
         screen.blit(p.image, p.rect)
         for t in p.tail:

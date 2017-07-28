@@ -12,6 +12,7 @@ class Tail(pygame.sprite.Sprite):
         self.image = pygame.Surface((BLOCK_SIZE, BLOCK_SIZE))
         self.image.fill(self.player.get_tail_color())
         self.rect = self.image.get_rect()
+        self.update()
         #self.rect.x = -nr * BLOCK_SIZE - nr * BETWEEN_SIZE + self.player.rect.x #, 0])
         #self.rect.y = self.player.rect.y
 
